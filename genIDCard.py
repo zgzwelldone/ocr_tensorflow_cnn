@@ -11,6 +11,7 @@ import copy
 import random
 import cv2
 
+
 class put_chinese_text(object):
     def __init__(self, ttf):
         self._face = freetype.Face(ttf)
@@ -27,16 +28,16 @@ class put_chinese_text(object):
         '''
         self._face.set_char_size(text_size * 64)
         metrics = self._face.size
-        ascender = metrics.ascender/64.0
+        ascender = metrics.ascender / 64.0
 
-        #descender = metrics.descender/64.0
-        #height = metrics.height/64.0
-        #linegap = height - ascender + descender
+        # descender = metrics.descender/64.0
+        # height = metrics.height/64.0
+        # linegap = height - ascender + descender
         ypos = int(ascender)
 
-        if not isinstance(text, unicode):
+        if not isinstance(text, freetype.unicode):
             text = text.decode('utf-8')
-        img = self.draw_string(image, pos[0], pos[1]+ypos, text, text_color)
+        img = self.draw_string(image, pos[0], pos[1] + ypos, text, text_color)
         return img
 
     def draw_string(self, img, x_pos, y_pos, text, color):
@@ -50,12 +51,12 @@ class put_chinese_text(object):
         '''
         prev_char = 0
         pen = freetype.Vector()
-        pen.x = x_pos << 6   # div 64
+        pen.x = x_pos << 6  # div 64
         pen.y = y_pos << 6
 
         hscale = 1.0
-        matrix = freetype.Matrix(int(hscale)*0x10000L, int(0.2*0x10000L),\
-                                 int(0.0*0x10000L), int(1.1*0x10000L))
+        matrix = freetype.Matrix(int(hscale) * 0x10000, int(0.2 * 0x10000), \
+                                 int(0.0 * 0x10000), int(1.1 * 0x10000))
         cur_pen = freetype.Vector()
         pen_translate = freetype.Vector()
 
@@ -95,7 +96,7 @@ class put_chinese_text(object):
 
         for row in range(rows):
             for col in range(cols):
-                if glyph_pixels[row*cols + col] != 0:
+                if glyph_pixels[row * cols + col] != 0:
                     img[y_pos + row][x_pos + col][0] = color[0]
                     img[y_pos + row][x_pos + col][1] = color[1]
                     img[y_pos + row][x_pos + col][2] = color[2]
@@ -103,63 +104,64 @@ class put_chinese_text(object):
 
 class gen_id_card(object):
     def __init__(self):
-       #self.words = open('AllWords.txt', 'r').read().split(' ')
-       self.number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-       self.char_set = self.number
-       #self.char_set = self.words + self.number
-       self.len = len(self.char_set)
-       
-       self.max_size = 18
-       self.ft = put_chinese_text('fonts/OCR-B.ttf')
-       
-    #随机生成字串，长度固定
-    #返回text,及对应的向量
+        # self.words = open('AllWords.txt', 'r').read().split(' ')
+        self.number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        self.char_set = self.number
+        # self.char_set = self.words + self.number
+        self.len = len(self.char_set)
+
+        self.max_size = 18
+        self.ft = put_chinese_text('fonts/OCR-B.ttf')
+
+    # 随机生成字串，长度固定
+    # 返回text,及对应的向量
     def random_text(self):
         text = ''
         vecs = np.zeros((self.max_size * self.len))
-        #size = random.randint(1, self.max_size)
+        # size = random.randint(1, self.max_size)
         size = self.max_size
         for i in range(size):
             c = random.choice(self.char_set)
             vec = self.char2vec(c)
             text = text + c
-            vecs[i*self.len:(i+1)*self.len] = np.copy(vec)
-        return text,vecs
-    
-    #根据生成的text，生成image,返回标签和图片元素数据
+            vecs[i * self.len:(i + 1) * self.len] = np.copy(vec)
+        return text, vecs
+
+    # 根据生成的text，生成image,返回标签和图片元素数据
     def gen_image(self):
-        text,vec = self.random_text()
-        img = np.zeros([32,256,3])
-        color_ = (255,255,255) # Write
+        text, vec = self.random_text()
+        img = np.zeros([32, 256, 3])
+        color_ = (255, 255, 255)  # Write
         pos = (0, 0)
         text_size = 21
         image = self.ft.draw_text(img, pos, text, text_size, color_)
-        #仅返回单通道值，颜色对于汉字识别没有什么意义
-        return image[:,:,2],text,vec
+        # 仅返回单通道值，颜色对于汉字识别没有什么意义
+        return image[:, :, 2], text, vec
 
-    #单字转向量
+    # 单字转向量
     def char2vec(self, c):
         vec = np.zeros((self.len))
         for j in range(self.len):
             if self.char_set[j] == c:
                 vec[j] = 1
         return vec
-        
-    #向量转文本
+
+    # 向量转文本
     def vec2text(self, vecs):
         text = ''
         v_len = len(vecs)
         for i in range(v_len):
-            if(vecs[i] == 1):
+            if (vecs[i] == 1):
                 text = text + self.char_set[i % self.len]
         return text
 
+
 if __name__ == '__main__':
     genObj = gen_id_card()
-    image_data,label,vec = genObj.gen_image()
+    image_data, label, vec = genObj.gen_image()
     cv2.imshow('image', image_data)
     cv2.waitKey(0)
-    
+
     '''
     line = '湖南省邵阳县'
     img = np.zeros([300,300,3])
@@ -178,5 +180,3 @@ if __name__ == '__main__':
     cv2.imshow('image1', image1)
     cv2.waitKey(0)
     '''
-
-
