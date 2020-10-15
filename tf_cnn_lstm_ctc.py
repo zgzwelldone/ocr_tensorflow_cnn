@@ -150,7 +150,7 @@ def get_next_batch(batch_size=128):
 
     for i in range(batch_size):
         # 生成不定长度的字串
-        image, text, vec = obj.gen_image(True)
+        image, text, vec = obj.gen_train_image(True)
         # np.transpose 矩阵转置 (32*256,) => (32,256) => (256,32)
         inputs[i, :] = np.transpose(image.reshape((OUTPUT_SHAPE[0], OUTPUT_SHAPE[1])))
         codes.append(list(text))

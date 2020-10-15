@@ -207,7 +207,7 @@ def get_next_batch(batch_size=128):
  
  
     for i in range(batch_size):
-		image, text, vec = obj.gen_image()
+		image, text, vec = obj.gen_train_image()
 		batch_x[i,:] = image.reshape((IMAGE_HEIGHT*IMAGE_WIDTH))
 		batch_y[i,:] = vec
     return batch_x, batch_y

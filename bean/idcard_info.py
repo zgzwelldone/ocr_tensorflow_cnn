@@ -12,6 +12,6 @@ class IdCard(object):
         # 身份证包含的字符集合
         self.char_set = self.number
         # 身份证字符集长度
-        self.len = len(self.char_set)
+        self.length = len(self.char_set)
         # 训练数据字符长度
         self.max_size = 18

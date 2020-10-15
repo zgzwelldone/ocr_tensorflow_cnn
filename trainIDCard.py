@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 
 obj = IdCardTrainDataUtil()
-image, text, vec = obj.gen_image()
+image, text, vec = obj.gen_train_image()
 
 # 图像大小
 IMAGE_HEIGHT = 32
@@ -27,7 +27,7 @@ def get_next_batch(batch_size=128):
     batch_y = np.zeros([batch_size, MAX_CAPTCHA * CHAR_SET_LEN])
 
     for i in range(batch_size):
-        image, text, vec = obj.gen_image()
+        image, text, vec = obj.gen_train_image()
         batch_x[i, :] = image.reshape((IMAGE_HEIGHT * IMAGE_WIDTH))
         batch_y[i, :] = vec
     return batch_x, batch_y
