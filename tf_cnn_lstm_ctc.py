@@ -103,6 +103,7 @@ def sparse_tuple_from(sequences, dtype=np.int32):
         sequences: a list of lists of type dtype where each element is a sequence
     Returns:
         A tuple with (indices, values, shape)
+        :param dtype:
     """
     indices = []
     values = []
@@ -154,8 +155,6 @@ def get_next_batch(batch_size=128):
         inputs[i, :] = np.transpose(image.reshape((OUTPUT_SHAPE[0], OUTPUT_SHAPE[1])))
         codes.append(list(text))
     targets = [np.asarray(i) for i in codes]
-    print
-    targets
     sparse_targets = sparse_tuple_from(targets)
     # (batch_size,) 值都是256
     seq_len = np.ones(inputs.shape[0]) * OUTPUT_SHAPE[1]
@@ -274,8 +273,6 @@ def train():
 
         # print b_loss
         # print b_targets, b_logits, b_seq_len
-        print
-        b_cost, steps
         if steps > 0 and steps % REPORT_STEPS == 0:
             do_report()
             # save_path = saver.save(session, "ocr.model", global_step=steps)
