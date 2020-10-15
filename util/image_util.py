@@ -52,8 +52,7 @@ class ImageUtil(object):
         pen.y = y_pos << 6
 
         hscale = 1.0
-        matrix = freetype.Matrix(int(hscale) * 0x10000, int(0.2 * 0x10000), \
-                                 int(0.0 * 0x10000), int(1.1 * 0x10000))
+        matrix = freetype.Matrix(int(hscale) * 0x10000, int(0.2 * 0x10000), int(0.0 * 0x10000), int(1.1 * 0x10000))
         cur_pen = freetype.Vector()
         pen_translate = freetype.Vector()
 

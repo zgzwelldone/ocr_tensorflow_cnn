@@ -27,7 +27,7 @@ class IdCardTrainDataUtil(object):
             char = random.choice(self.idCard.char_set)
             vector = self.char2vec(char)
             text = text + char
-            vectors[i * self.idCard.length:(i + 1) * self.idCard.length] = np.copy(vector)
+            zero_vectors[i * self.idCard.length:(i + 1) * self.idCard.length] = np.copy(vector)
         return text, zero_vectors
 
     # 根据生成的text，生成image,返回标签和图片元素数据
