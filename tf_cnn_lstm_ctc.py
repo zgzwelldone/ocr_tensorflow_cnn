@@ -5,7 +5,7 @@ tf CNN+LSTM+CTC 训练识别不定长数字字符图片
 
 @author: pengyuanjie
 """
-from genIDCard import *
+from util.idcard_train_data_util import *
 
 import numpy as np
 import time
@@ -24,7 +24,7 @@ num_epochs = 10000
 num_hidden = 64
 num_layers = 1
 
-obj = gen_id_card()
+obj = IdCardTrainDataUtil()
 
 num_classes = obj.len + 1 + 1  # 10位数字 + blank + ctc blank
 
@@ -143,7 +143,7 @@ def avg_pool(x, ksize=(2, 2), stride=(2, 2)):
 
 # 生成一个训练batch
 def get_next_batch(batch_size=128):
-    obj = gen_id_card()
+    obj = IdCardTrainDataUtil()
     # (batch_size,256,32)
     inputs = np.zeros([batch_size, OUTPUT_SHAPE[1], OUTPUT_SHAPE[0]])
     codes = []

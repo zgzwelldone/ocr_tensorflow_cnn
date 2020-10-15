@@ -5,12 +5,12 @@ tf 训练识别身份证数字(18个字符)图片
 
 @author: pengyuanjie
 """
-from genIDCard import *
+from util.idcard_train_data_util import *
 
 import numpy as np
 import tensorflow as tf
 
-obj = gen_id_card()
+obj = IdCardTrainDataUtil()
 image, text, vec = obj.gen_image()
 
 # 图像大小
@@ -22,7 +22,7 @@ CHAR_SET_LEN = obj.len
 
 # 生成一个训练batch
 def get_next_batch(batch_size=128):
-    obj = gen_id_card()
+    obj = IdCardTrainDataUtil()
     batch_x = np.zeros([batch_size, IMAGE_HEIGHT * IMAGE_WIDTH])
     batch_y = np.zeros([batch_size, MAX_CAPTCHA * CHAR_SET_LEN])
 

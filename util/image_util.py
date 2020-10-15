@@ -1,18 +1,14 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
 """
-身份证文字+数字生成类
+图片处理工具类
 
-@author: pengyuanjie
+@author: zhaogzh
 """
-import numpy as np
-import freetype
 import copy
-import random
-import cv2
+
+import freetype
 
 
-class put_chinese_text(object):
+class ImageUtil(object):
     def __init__(self, ttf):
         self._face = freetype.Face(ttf)
 
@@ -43,6 +39,7 @@ class put_chinese_text(object):
     def draw_string(self, img, x_pos, y_pos, text, color):
         """
         draw string
+        :param img:
         :param x_pos: text x-postion on img
         :param y_pos: text y-postion on img
         :param text:  text (unicode)
@@ -100,60 +97,3 @@ class put_chinese_text(object):
                     img[y_pos + row][x_pos + col][0] = color[0]
                     img[y_pos + row][x_pos + col][1] = color[1]
                     img[y_pos + row][x_pos + col][2] = color[2]
-
-
-class gen_id_card(object):
-    def __init__(self):
-        self.number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        self.char_set = self.number
-        self.len = len(self.char_set)
-        self.max_size = 18
-        self.ft = put_chinese_text('fonts/OCR-B.ttf')
-
-    # 随机生成字串，长度固定
-    # 返回text,及对应的向量
-    def random_text(self):
-        text = ''
-        vecs = np.zeros((self.max_size * self.len))
-        size = self.max_size
-        for i in range(size):
-            c = random.choice(self.char_set)
-            vec = self.char2vec(c)
-            text = text + c
-            vecs[i * self.len:(i + 1) * self.len] = np.copy(vec)
-        return text, vecs
-
-    # 根据生成的text，生成image,返回标签和图片元素数据
-    def gen_image(self):
-        text, vec = self.random_text()
-        img = np.zeros([32, 256, 3])
-        color_ = (255, 255, 255)  # white
-        pos = (0, 0)
-        text_size = 21
-        image = self.ft.draw_text(img, pos, text, text_size, color_)
-        # 仅返回单通道值，颜色对于汉字识别没有什么意义
-        return image[:, :, 2], text, vec
-
-    # 单字转向量
-    def char2vec(self, c):
-        vec = np.zeros(self.len)
-        for j in range(self.len):
-            if self.char_set[j] == c:
-                vec[j] = 1
-        return vec
-
-    # 向量转文本
-    def vec2text(self, vecs):
-        text = ''
-        v_len = len(vecs)
-        for i in range(v_len):
-            if vecs[i] == 1:
-                text = text + self.char_set[i % self.len]
-        return text
-
-
-if __name__ == '__main__':
-    genObj = gen_id_card()
-    image_data, label, vec = genObj.gen_image()
-    cv2.imshow('image', image_data)
-    cv2.waitKey(0)
