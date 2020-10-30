@@ -1,8 +1,6 @@
 import tensorflow as tf
 
-# 定义一些常量
-# 输出图片大小
-OUTPUT_SHAPE = (32, 256)
+from tf_cnn_lstm_ctc import OUTPUT_SHAPE
 
 
 # 创建模型权重张量
