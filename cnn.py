@@ -30,7 +30,7 @@ def avg_pool(x, ksize=(2, 2), stride=(2, 2)):
 
 
 # 定义CNN网络，处理图片，
-def convolution_layers():
+def generate_convolution_network():
     # 输入数据
     inputs = tf.placeholder(tf.float32, [None, None, OUTPUT_SHAPE[0]])
 
