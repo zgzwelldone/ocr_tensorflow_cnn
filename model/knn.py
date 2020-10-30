@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 # Import MNIST data
 from tensorflow.examples.tutorials.mnist import input_data
 
-mnist = input_data.read_data_sets("./tmp/data/", one_hot=True)
+mnist = input_data.read_data_sets("../tmp/data/", one_hot=True)
 full_data_x = mnist.train.images
 
 # Parameters
