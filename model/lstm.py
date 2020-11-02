@@ -14,10 +14,6 @@ num_classes = obj.idCard.length + 1 + 1  # 10位数字 + blank + ctc blank
 def generate_lstm_network():
     inputs = tf.placeholder(tf.float32, [None, None, OUTPUT_SHAPE[0]])
 
-    # TODO 定义ctc_loss需要的稀疏矩阵
-    targets = tf.sparse_placeholder(tf.int32)
-
-    # 1维向量 序列长度 [batch_size,]
     seq_len = tf.placeholder(tf.int32, [None])
 
     # 定义LSTM网络
@@ -36,4 +32,4 @@ def generate_lstm_network():
     logits = tf.reshape(logits, [batch_s, -1, num_classes])
     logits = tf.transpose(logits, (1, 0, 2))
 
-    return logits, inputs, targets, seq_len
+    return logits, inputs, seq_len

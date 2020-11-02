@@ -35,15 +35,15 @@ def decode_sparse_tensor(sparse_tensor):
 def decode_a_seq(indexes, spars_tensor):
     decoded = []
     for m in indexes:
-        str = DIGITS[spars_tensor[1][m]]
-        decoded.append(str)
+        temp_string = DIGITS[spars_tensor[1][m]]
+        decoded.append(temp_string)
     return decoded
 
 
 def report_accuracy(decoded_list, test_targets):
     original_list = decode_sparse_tensor(test_targets)
     detected_list = decode_sparse_tensor(decoded_list)
-    true_numer = 0
+    true_number = 0
 
     if len(original_list) != len(detected_list):
         print("len(original_list)", len(original_list), "len(detected_list)", len(detected_list),
@@ -55,8 +55,8 @@ def report_accuracy(decoded_list, test_targets):
         hit = (number == detect_number)
         print(hit, number, "(", len(number), ") <-------> ", detect_number, "(", len(detect_number), ")")
         if hit:
-            true_numer = true_numer + 1
-    print("Test Accuracy:", true_numer * 1.0 / len(original_list))
+            true_number = true_number + 1
+    print("Test Accuracy:", true_number * 1.0 / len(original_list))
 
 
 # 转化一个序列列表为稀疏矩阵
@@ -67,6 +67,7 @@ def sparse_tuple_from(sequences, dtype=np.int32):
         sequences: a list of lists of type dtype where each element is a sequence
     Returns:
         A tuple with (indices, values, shape)
+        :param sequences:
         :param dtype:
     """
     indices = []
@@ -75,8 +76,11 @@ def sparse_tuple_from(sequences, dtype=np.int32):
     for n, seq in enumerate(sequences):
         indices.extend(zip([n] * len(seq), range(len(seq))))
         values.extend(seq)
-
+    # 纬度：1152*2,
+    # [[ 0  0], [ 0  1], [ 0  2], [ 0  3], [ 0  4], [ 0  5], [ 0  6], [ 0  7], [ 0  8], [ 0  9], [ 0 10], [ 0 11], [ 0 12], [ 0 13], [ 0 14], [ 0 15], [ 0 16], [ 0 17], [ 1  0], [ 1  1], [ 1  2], [ 1  3], [ 1  4], [ 1  5], [ 1  6], [ 1  7], [ 1  8], [ 1  9], ...
     indices = np.asarray(indices, dtype=np.int64)
+    # 纬度：1152
+    # [0 5 1 4 8 5 2 3 3 2 7 4 5 6 9 1 6 0 7 1 3 1 2 7 6 0 8 0 9 4 9 9 9 7 6 0 1, 5 9 1 0 2 6 2 4 5 5 3 2 9 9 4 9 5 0 6 3 3 1 6 4 9 4 1 1 1 3 3 9 0 1 6 8 0, 0 8 8 7 1 2 8 9 7 7 6 7 6 4 6 8 6 6 9 5 7 0 8 1 7 5]
     values = np.asarray(values, dtype=dtype)
     shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1] + 1], dtype=np.int64)
 
@@ -94,6 +98,7 @@ def get_next_batch(batch_size=128):
         # 生成不定长度的字串
         image, text, vec = obj.gen_train_image()
         # np.transpose 矩阵转置 (32*256,) => (32,256) => (256,32)
+        # 纬度：64*256*32，64张生成图片
         inputs[i, :] = np.transpose(image.reshape((OUTPUT_SHAPE[0], OUTPUT_SHAPE[1])))
         codes.append(list(text))
     targets = [np.asarray(i) for i in codes]
@@ -110,7 +115,10 @@ def train():
                                                DECAY_STEPS,
                                                LEARNING_RATE_DECAY_FACTOR,
                                                staircase=True)
-    logits, inputs, targets, seq_len = generate_lstm_network()
+    logits, inputs, seq_len = generate_lstm_network()
+
+    # 定义ctc_loss需要的稀疏矩阵
+    targets = tf.sparse_placeholder(tf.int32)
 
     loss = tf.nn.ctc_loss(labels=targets, inputs=logits, sequence_length=seq_len)
     cost = tf.reduce_mean(loss)
@@ -122,20 +130,18 @@ def train():
     init = tf.global_variables_initializer()
 
     def do_batch():
-        train_inputs, train_targets, train_seq_len = get_next_batch(BATCH_SIZE)
-        feed = {inputs: train_inputs, targets: train_targets, seq_len: train_seq_len}
+        batch_train_inputs, batch_train_targets, batch_train_seq_len = get_next_batch(BATCH_SIZE)
+        feed = {inputs: batch_train_inputs, targets: batch_train_targets, seq_len: batch_train_seq_len}
 
-        b_loss, b_targets, b_logits, b_seq_len, b_cost, steps, _ = session.run(
+        b_loss, b_targets, b_logits, b_seq_len, b_cost, b_steps, _ = session.run(
             [loss, targets, logits, seq_len, cost, global_step, optimizer], feed)
 
-        if steps > 0 and steps % REPORT_STEPS == 0:
+        if b_steps > 0 and b_steps % REPORT_STEPS == 0:
             test_inputs, test_targets, test_seq_len = get_next_batch(BATCH_SIZE)
-            test_feed = {inputs: test_inputs,
-                         targets: test_targets,
-                         seq_len: test_seq_len}
-            dd, log_probs, accuracy = session.run([decoded[0], log_prob, acc], test_feed)
-            report_accuracy(dd, test_targets)
-        return b_cost, steps
+            test_feed = {inputs: test_inputs, targets: test_targets, seq_len: test_seq_len}
+            batch_decode, batch_log_prob, batch_accuracy = session.run([decoded[0], log_prob, acc], test_feed)
+            report_accuracy(batch_decode, test_targets)
+        return b_cost, b_steps
 
     with tf.Session() as session:
         session.run(init)
@@ -151,6 +157,7 @@ def train():
 
             train_cost /= TRAIN_SIZE
 
+            # 模型验证
             train_inputs, train_targets, train_seq_len = get_next_batch(BATCH_SIZE)
             val_feed = {inputs: train_inputs,
                         targets: train_targets,
@@ -158,7 +165,7 @@ def train():
 
             val_cost, val_ler, lr, steps = session.run([cost, acc, learning_rate, global_step], feed_dict=val_feed)
 
-            log = "Epoch {}/{}, steps = {}, train_cost = {:.3f}, train_ler = {:.3f}, val_cost = {:.3f}, val_ler = {:.3f}, time = {:.3f}s, learning_rate = {}"
+            log = "Epoch {}/{}, steps = {}, 训练损失值 = {:.3f}, train_ler = {:.3f}, 验证损失值 = {:.3f}, 验证准确度 = {:.3f}, time = {:.3f}s, 学习率 = {}"
             print(log.format(curr_epoch + 1, num_epochs, steps, train_cost, train_ler, val_cost, val_ler,
                              time.time() - start, lr))
 

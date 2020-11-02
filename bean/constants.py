@@ -8,7 +8,7 @@ num_epochs = 5
 # 初始化学习速率
 INITIAL_LEARNING_RATE = 1e-3
 DECAY_STEPS = 5000
-REPORT_STEPS = 100
+REPORT_STEPS = 1
 LEARNING_RATE_DECAY_FACTOR = 0.9  # The learning rate decay factor
 MOMENTUM = 0.9
 
