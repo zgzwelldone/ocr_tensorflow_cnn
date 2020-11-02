@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from bean.constants import *
+from bean.constants import OUTPUT_SHAPE
 from util.idcard_train_data_util import IdCardTrainDataUtil
 
 # 定义一些常量
