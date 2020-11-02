@@ -1,0 +1,18 @@
+# 定义一些常量
+# 图片大小，32 x 256
+OUTPUT_SHAPE = (32, 256)
+
+# 训练最大轮次
+num_epochs = 5
+
+# 初始化学习速率
+INITIAL_LEARNING_RATE = 1e-3
+DECAY_STEPS = 5000
+REPORT_STEPS = 100
+LEARNING_RATE_DECAY_FACTOR = 0.9  # The learning rate decay factor
+MOMENTUM = 0.9
+
+DIGITS = '0123456789'
+BATCHES = 10
+BATCH_SIZE = 64
+TRAIN_SIZE = BATCHES * BATCH_SIZE

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from tf_cnn_lstm_ctc import OUTPUT_SHAPE
+from bean.constants import *
 from util.idcard_train_data_util import IdCardTrainDataUtil
 
 # 定义一些常量
@@ -14,7 +14,7 @@ num_classes = obj.idCard.length + 1 + 1  # 10位数字 + blank + ctc blank
 def generate_lstm_network():
     inputs = tf.placeholder(tf.float32, [None, None, OUTPUT_SHAPE[0]])
 
-    # 定义ctc_loss需要的稀疏矩阵
+    # TODO 定义ctc_loss需要的稀疏矩阵
     targets = tf.sparse_placeholder(tf.int32)
 
     # 1维向量 序列长度 [batch_size,]
@@ -23,8 +23,9 @@ def generate_lstm_network():
     # 定义LSTM网络
     cell = tf.contrib.rnn.LSTMCell(num_hidden, state_is_tuple=True)
     stack = tf.contrib.rnn.MultiRNNCell([cell] * num_layers, state_is_tuple=True)
-    outputs, _ = tf.nn.dynamic_rnn(cell, inputs, seq_len, dtype=tf.float32)
+    outputs, _ = tf.nn.dynamic_rnn(stack, inputs, seq_len, dtype=tf.float32)
 
+    # 获取输入数据的纬度
     shape = tf.shape(inputs)
     batch_s, max_timesteps = shape[0], shape[1]
 

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from tf_cnn_lstm_ctc import OUTPUT_SHAPE
+from bean.constants import *
 
 
 # 创建模型权重张量
