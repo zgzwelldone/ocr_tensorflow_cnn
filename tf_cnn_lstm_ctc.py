@@ -130,43 +130,41 @@ def train():
     init = tf.global_variables_initializer()
 
     def do_batch():
-        batch_train_inputs, batch_train_targets, batch_train_seq_len = get_next_batch(BATCH_SIZE)
-        feed = {inputs: batch_train_inputs, targets: batch_train_targets, seq_len: batch_train_seq_len}
+        train_inputs, train_targets, train_seq_len = get_next_batch(BATCH_SIZE)
+        feed = {inputs: train_inputs, targets: train_targets, seq_len: train_seq_len}
 
-        b_loss, b_targets, b_logits, b_seq_len, b_cost, b_steps, _ = session.run(
+        train_loss, train_targets, train_logits, train_seq_len, train_cost, train_steps, _ = session.run(
             [loss, targets, logits, seq_len, cost, global_step, optimizer], feed)
 
-        if b_steps > 0 and b_steps % REPORT_STEPS == 0:
+        if train_steps > 0 and train_steps % REPORT_STEPS == 0:
             test_inputs, test_targets, test_seq_len = get_next_batch(BATCH_SIZE)
             test_feed = {inputs: test_inputs, targets: test_targets, seq_len: test_seq_len}
-            batch_decode, batch_log_prob, batch_accuracy = session.run([decoded[0], log_prob, acc], test_feed)
-            report_accuracy(batch_decode, test_targets)
-        return b_cost, b_steps
+            test_decode, test_log_prob, test_accuracy = session.run([decoded[0], log_prob, acc], test_feed)
+            report_accuracy(test_decode, test_targets)
+        return train_cost, train_steps
 
     with tf.Session() as session:
         session.run(init)
         for curr_epoch in range(num_epochs):
             print("Epoch.......", curr_epoch)
-            train_cost = train_ler = 0
+            train_cost_sum = train_ler_sum = 0
             for batch in range(BATCHES):
                 start = time.time()
                 c, steps = do_batch()
-                train_cost += c * BATCH_SIZE
+                train_cost_sum += c * BATCH_SIZE
                 seconds = time.time() - start
                 print("Step:", steps, ", batch seconds:", seconds)
 
-            train_cost /= TRAIN_SIZE
+            train_cost_sum /= TRAIN_SIZE
 
             # 模型验证
-            train_inputs, train_targets, train_seq_len = get_next_batch(BATCH_SIZE)
-            val_feed = {inputs: train_inputs,
-                        targets: train_targets,
-                        seq_len: train_seq_len}
+            verify_inputs, verify_targets, verify_seq_len = get_next_batch(BATCH_SIZE)
+            val_feed = {inputs: verify_inputs, targets: verify_targets, seq_len: verify_seq_len}
 
             val_cost, val_ler, lr, steps = session.run([cost, acc, learning_rate, global_step], feed_dict=val_feed)
 
             log = "Epoch {}/{}, steps = {}, 训练损失值 = {:.3f}, train_ler = {:.3f}, 验证损失值 = {:.3f}, 验证准确度 = {:.3f}, time = {:.3f}s, 学习率 = {}"
-            print(log.format(curr_epoch + 1, num_epochs, steps, train_cost, train_ler, val_cost, val_ler,
+            print(log.format(curr_epoch + 1, num_epochs, steps, train_cost_sum, train_ler_sum, val_cost, val_ler,
                              time.time() - start, lr))
 
 
