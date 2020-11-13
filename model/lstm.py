@@ -8,7 +8,7 @@ num_hidden = 64
 num_layers = 1
 
 obj = IdCardTrainDataUtil()
-num_classes = obj.idCard.length + 1 + 1  # 10位数字 + blank + ctc blank
+num_classes = obj.idCard.length + 1  # 10位数字 + ctc blank
 
 
 def generate_lstm_network():

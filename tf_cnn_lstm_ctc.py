@@ -27,14 +27,20 @@ def decode_sparse_tensor(sparse_tensor):
         current_seq.append(offset)
     decoded_indexes.append(current_seq)
     result = []
-    for index in decoded_indexes:
-        result.append(decode_a_seq(index, sparse_tensor))
+    if len(sparse_tensor[1]) - 1 != decoded_indexes[len(decoded_indexes) - 1][
+        len(decoded_indexes[len(decoded_indexes) - 1]) - 1]:
+        print(len(sparse_tensor[1]) - 1, decoded_indexes[len(decoded_indexes) - 1])
+    else:
+        for index in decoded_indexes:
+            result.append(decode_a_seq(index, sparse_tensor))
     return result
 
 
 def decode_a_seq(indexes, spars_tensor):
     decoded = []
     for m in indexes:
+        if spars_tensor[1][m] > 9:
+            print("Index Error:%s" % spars_tensor[1][m])
         temp_string = DIGITS[spars_tensor[1][m]]
         decoded.append(temp_string)
     return decoded
@@ -53,22 +59,25 @@ def report_accuracy(decoded_list, test_targets):
     for idx, number in enumerate(original_list):
         detect_number = detected_list[idx]
         hit = (number == detect_number)
-        print(hit, number, "(", len(number), ") <-------> ", detect_number, "(", len(detect_number), ")")
+        # print(hit, number, "(", len(number), ") <-------> ", detect_number, "(", len(detect_number), ")")
         if hit:
             true_number = true_number + 1
     print("Test Accuracy:", true_number * 1.0 / len(original_list))
 
 
-# 转化一个序列列表为稀疏矩阵
 def sparse_tuple_from(sequences, dtype=np.int32):
     """
     Create a sparse representention of x.
     Args:
-        sequences: a list of lists of type dtype where each element is a sequence
-    Returns:
-        A tuple with (indices, values, shape)
         :param sequences:
         :param dtype:
+    Returns:
+        A tuple with (indices, values, shape)
+        indices: 1152(64*18)*2, [[ 0  0], [ 0  1], [ 0  2], [ 0  3], [ 0  4], [ 0  5], [ 0  6], [ 0  7], [ 0  8], [ 0  9], [ 0 10], [ 0 11], [ 0 12], [ 0 13], [ 0 14], [ 0 15], [ 0 16], [ 0 17], [ 1  0], [ 1  1], [ 1  2], [ 1  3], [ 1  4], [ 1  5], [ 1  6], [ 1  7], [ 1  8], [ 1  9], ...
+                 图片index, 字符index
+        values: 1152, [0 5 1 4 8 5 2 3 3 2 7 4 5 6 9 1 6 0 7 1 3 1 2 7 6 0 8 0 9 4 9 9 9 7 6 0 1, 5 9 1 0 2 6 2 4 5 5 3 2 9 9 4 9 5 0 6 3 3 1 6 4 9 4 1 1 1 3 3 9 0 1 6 8 0, 0 8 8 7 1 2 8 9 7 7 6 7 6 4 6 8 6 6 9 5 7 0 8 1 7 5]
+                字符标记
+        shape: [64 18]
     """
     indices = []
     values = []
@@ -76,10 +85,10 @@ def sparse_tuple_from(sequences, dtype=np.int32):
     for n, seq in enumerate(sequences):
         indices.extend(zip([n] * len(seq), range(len(seq))))
         values.extend(seq)
-    # 纬度：1152*2,
+    # 维度：1152*2,
     # [[ 0  0], [ 0  1], [ 0  2], [ 0  3], [ 0  4], [ 0  5], [ 0  6], [ 0  7], [ 0  8], [ 0  9], [ 0 10], [ 0 11], [ 0 12], [ 0 13], [ 0 14], [ 0 15], [ 0 16], [ 0 17], [ 1  0], [ 1  1], [ 1  2], [ 1  3], [ 1  4], [ 1  5], [ 1  6], [ 1  7], [ 1  8], [ 1  9], ...
     indices = np.asarray(indices, dtype=np.int64)
-    # 纬度：1152
+    # 维度：1152
     # [0 5 1 4 8 5 2 3 3 2 7 4 5 6 9 1 6 0 7 1 3 1 2 7 6 0 8 0 9 4 9 9 9 7 6 0 1, 5 9 1 0 2 6 2 4 5 5 3 2 9 9 4 9 5 0 6 3 3 1 6 4 9 4 1 1 1 3 3 9 0 1 6 8 0, 0 8 8 7 1 2 8 9 7 7 6 7 6 4 6 8 6 6 9 5 7 0 8 1 7 5]
     values = np.asarray(values, dtype=dtype)
     shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1] + 1], dtype=np.int64)
@@ -87,8 +96,17 @@ def sparse_tuple_from(sequences, dtype=np.int32):
     return indices, values, shape
 
 
-# 生成一个训练batch
 def get_next_batch(batch_size=128):
+    """
+    生成一个批次的训练图片数据
+    Args:
+        :param batch_size: 批次图片数量，默认128
+    Returns:
+        A tuple with (inputs, sparse_targets, seq_len)
+        inputs: 64*256*32 64张训练图片数据
+        sparse_targets: 参照sparse_tuple_from方法的返回值
+        seq_len:
+    """
     obj = IdCardTrainDataUtil()
     # (batch_size,256,32)
     inputs = np.zeros([batch_size, OUTPUT_SHAPE[1], OUTPUT_SHAPE[0]])
@@ -98,7 +116,7 @@ def get_next_batch(batch_size=128):
         # 生成不定长度的字串
         image, text, vec = obj.gen_train_image()
         # np.transpose 矩阵转置 (32*256,) => (32,256) => (256,32)
-        # 纬度：64*256*32，64张生成图片
+        # 维度：64*256*32，64张生成图片
         inputs[i, :] = np.transpose(image.reshape((OUTPUT_SHAPE[0], OUTPUT_SHAPE[1])))
         codes.append(list(text))
     targets = [np.asarray(i) for i in codes]
